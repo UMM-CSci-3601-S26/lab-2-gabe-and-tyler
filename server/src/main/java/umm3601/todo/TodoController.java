@@ -19,12 +19,15 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import umm3601.Controller;
 
+// Controller that manages request for info about todos.
 public class TodoController implements Controller {
 
+  // Creating our path for our all todos.
   private static final String API_TODOS = "/api/todos";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
+  // Constructing a controller for todos.
   public TodoController(MongoDatabase database) {
     todoCollection = JacksonMongoCollection.builder().build(
         database,
@@ -33,12 +36,37 @@ public class TodoController implements Controller {
         UuidRepresentation.STANDARD);
   }
 
+  /* Construct a Bson filter document to use in the `find` method based on the
+   *    query parameters from the context.
+   *
+   * Right now it filters for nothing as we are returning all todos.
+   *
+   * @param ctx a Javalin HTTP context, which contains the query parameters
+   *    used to construct the filter
+   * @return a Bson filter document that can be used in the `find` method
+   *    to filter the database collection of users
+   */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
   }
 
+  /*
+   * Construct a Bson sorting document to use in the `sort` method based on the
+   *    query parameters from the context.
+   *
+   * This checks for the presence of the `sortby` and `sortorder` query
+   *    parameters and constructs a sorting document that will sort todos by
+   *    the specified field in the specified order.
+   * If the `sortby` query parameter is not present, it defaults to "owner". If the `sortorder`
+   *    query parameter is not present, it defaults to "asc".
+   *
+   * @param ctx a Javalin HTTP context, which contains the query parameters
+   *    used to construct the sorting order
+   * @return a Bson sorting document that can be used in the `sort` method
+   *    to sort the database collection of users
+   */
   private Bson constructSortingOrder(Context ctx) {
     String sortBy = Objects.requireNonNullElse(ctx.queryParam("sortby"), "owner");
     String sortOrder = Objects.requireNonNullElse(ctx.queryParam("sortorder"), "asc");
@@ -46,21 +74,41 @@ public class TodoController implements Controller {
     return sortingOrder;
   }
 
+  /*
+   * Set the JSON body of the response to be a list of all the todos returned from the database
+   *    that match any requested filters and ordering
+   *
+   * @param ctx a Javalin HTTP context
+   */
   public void getTodos(Context ctx) {
     Bson combinedFilter = constructFilter(ctx);
     Bson sortingOrder = constructSortingOrder(ctx);
 
+    // All three of the find, sort, and into steps happen "in order listed" inside the
+    // database. MongoDB is going to find the todos with the specified
+    // properties, return those sorted in the specified manner, and put the
+    // results into an initially empty ArrayList.
     ArrayList<Todo> matchingTodos = todoCollection
       .find(combinedFilter)
       .sort(sortingOrder)
       .into(new ArrayList<>());
 
+    // Set the JSON body of the response to be the list of todos returned by the database.
+    // This calls result(jsonString), and also sets content type to json
     ctx.json(matchingTodos);
     ctx.status(HttpStatus.OK);
   }
 
+  /*
+   * Sets up routes for the `todo` collection endpoints.
+   * A TodoController instance handles the todo endpoints,
+   * and the addRoutes method adds the routes to this controller.
+   *
+   * @param server The Javalin server instance
+   */
   @Override
   public void addRoutes(Javalin server) {
+    // List todos, filtered using query parameters
     server.get(API_TODOS, this::getTodos);
   }
 }

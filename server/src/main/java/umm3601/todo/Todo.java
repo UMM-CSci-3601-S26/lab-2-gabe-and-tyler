@@ -7,7 +7,7 @@ import org.mongojack.ObjectId;
 public class Todo {
 
   @ObjectId @Id
-
+  // Creating variables that todo should know of.
   @SuppressWarnings({"MemberName"})
   public String _id;
   public String owner;
@@ -15,6 +15,7 @@ public class Todo {
   public String body;
   public String category;
 
+  // Checks to make sure the todo is in the todo data, and that it is an actual todo.
   @Override
   public boolean equals(Object obj) {
     if (!(obj instanceof Todo)) {
@@ -23,12 +24,13 @@ public class Todo {
     Todo other = (Todo) obj;
     return _id.equals(other._id);
   }
-
+  // This makes our identical ids hash to the same location.
   @Override
   public int hashCode() {
     return _id.hashCode();
   }
 
+  // Returns the owner of todo, we can use this for debugging.
   @Override
   public String toString() {
     return owner;
