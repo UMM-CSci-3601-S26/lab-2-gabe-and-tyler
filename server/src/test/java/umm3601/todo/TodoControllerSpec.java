@@ -3,6 +3,7 @@ package umm3601.todo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -138,9 +139,9 @@ class TodoControllerSpec {
   void addsRoutes() {
     Javalin mockServer = mock(Javalin.class);
     todoController.addRoutes(mockServer);
-    verify(mockServer, Mockito.atLeast(3)).get(any(), any());
-    verify(mockServer, Mockito.atLeastOnce()).post(any(), any());
-    verify(mockServer, Mockito.atLeastOnce()).delete(any(), any());
+    verify(mockServer, Mockito.atLeast(1)).get(any(), any());
+    verify(mockServer, never()).post(any(), any());
+    verify(mockServer, never()).delete(any(), any());
   }
 
   @Test
