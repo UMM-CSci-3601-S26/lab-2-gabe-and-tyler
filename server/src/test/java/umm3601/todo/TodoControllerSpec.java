@@ -1,6 +1,7 @@
 package umm3601.todo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -34,9 +35,11 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-import io.javalin.json.JavalinJackson;
+//import io.javalin.json.JavalinJackson;
+import io.javalin.http.NotFoundResponse;
 
 @SuppressWarnings({ "MagicNumber" })
 
@@ -56,7 +59,7 @@ class TodoControllerSpec {
   private static MongoDatabase db;
 
   // Used to translate between JSON and POJOs.
-  private static JavalinJackson javalinJackson = new JavalinJackson();
+  //private static JavalinJackson javalinJackson = new JavalinJackson();
 
   @Mock
   private Context ctx;
@@ -139,7 +142,7 @@ class TodoControllerSpec {
   void addsRoutes() {
     Javalin mockServer = mock(Javalin.class);
     todoController.addRoutes(mockServer);
-    verify(mockServer, Mockito.atLeast(1)).get(any(), any());
+    verify(mockServer, Mockito.atLeast(2)).get(any(), any());
     verify(mockServer, never()).post(any(), any());
     verify(mockServer, never()).delete(any(), any());
   }
@@ -157,5 +160,41 @@ class TodoControllerSpec {
     assertEquals(
         db.getCollection("todos").countDocuments(),
         todoArrayListCaptor.getValue().size());
+  }
+
+  @Test
+  void getTodoWithExistentId() throws IOException {
+    String id = magicjohnsonsID.toHexString();
+    when(ctx.pathParam("id")).thenReturn(id);
+
+    todoController.getTodoByID(ctx);
+
+    verify(ctx).json(todoCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    assertEquals("Lakers", todoCaptor.getValue().owner);
+    assertEquals(magicjohnsonsID.toHexString(), todoCaptor.getValue()._id);
+  }
+
+  @Test
+  void getTodoWithBadId() throws IOException {
+    when(ctx.pathParam("id")).thenReturn("bad");
+
+    Throwable exception = assertThrows(BadRequestResponse.class, () -> {
+      todoController.getTodoByID(ctx);
+    });
+
+    assertEquals("The requested todo id wasn't a legal Mongo Object ID.", exception.getMessage());
+  }
+
+  @Test
+  void getTodoWithNonexistentId() throws IOException {
+    String id = "588935f5c668650dc77df581";
+    when(ctx.pathParam("id")).thenReturn(id);
+
+    Throwable exception = assertThrows(NotFoundResponse.class, () -> {
+      todoController.getTodoByID(ctx);
+    });
+
+    assertEquals("The requested todo was not found", exception.getMessage());
   }
 }

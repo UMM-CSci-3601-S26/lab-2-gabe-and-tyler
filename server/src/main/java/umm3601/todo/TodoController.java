@@ -1,6 +1,7 @@
 package umm3601.todo;
 
 import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,14 +10,17 @@ import java.util.Objects;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.mongojack.JacksonMongoCollection;
 
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Sorts;
 
 import io.javalin.Javalin;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
+import io.javalin.http.NotFoundResponse;
 import umm3601.Controller;
 
 // Controller that manages request for info about todos.
@@ -24,6 +28,9 @@ public class TodoController implements Controller {
 
   // Creating our path for our all todos.
   private static final String API_TODOS = "/api/todos";
+
+  // Creating our path for a todo by id
+  private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
@@ -100,6 +107,29 @@ public class TodoController implements Controller {
   }
 
   /*
+   * Set the JSON body of the response to be the single user
+   * specified by the `id` parameter in the request
+   *
+   * @param ctx a Javalin HTTP context
+   */
+  public void getTodoByID(Context ctx) {
+    String id = ctx.pathParam("id");
+    Todo todo;
+
+    try {
+      todo = todoCollection.find(eq("_id", new ObjectId(id))).first();
+    } catch (IllegalArgumentException e) {
+      throw new BadRequestResponse("The requested todo id wasn't a legal Mongo Object ID.");
+    }
+    if (todo == null) {
+      throw new NotFoundResponse("The requested todo was not found");
+    } else {
+      ctx.json(todo);
+      ctx.status(HttpStatus.OK);
+    }
+  }
+
+  /*
    * Sets up routes for the `todo` collection endpoints.
    * A TodoController instance handles the todo endpoints,
    * and the addRoutes method adds the routes to this controller.
@@ -110,5 +140,7 @@ public class TodoController implements Controller {
   public void addRoutes(Javalin server) {
     // List todos, filtered using query parameters
     server.get(API_TODOS, this::getTodos);
+    // Get the specified todo by ID
+    server.get(API_TODO_BY_ID, this::getTodoByID);
   }
 }
