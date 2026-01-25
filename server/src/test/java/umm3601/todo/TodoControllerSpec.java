@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+//import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,9 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 //import io.javalin.json.JavalinJackson;
 import io.javalin.http.NotFoundResponse;
+// import io.javalin.validation.Validation;
+// import io.javalin.validation.Validator;
+// import umm3601.todo.TodoController;
 
 @SuppressWarnings({ "MagicNumber" })
 
@@ -197,4 +201,23 @@ class TodoControllerSpec {
 
     assertEquals("The requested todo was not found", exception.getMessage());
   }
+
+  // Need to ask question on why testing isn't working and getting null
+  // @Test
+  // void canGetTodosWithStatus() throws IOException {
+  //   Map<String, List<String>> queryParams = new HashMap<>();
+  //   queryParams.put(TodoController.STATUS_KEY, Arrays.asList(new String[] {"true"}));
+  //   when(ctx.queryParamMap()).thenReturn(queryParams);
+  //   when(ctx.queryParam(TodoController.STATUS_KEY)).thenReturn("true");
+
+  //   todoController.getTodos(ctx);
+
+  //   verify(ctx).json(todoArrayListCaptor.capture());
+  //   verify(ctx).status(HttpStatus.OK);
+
+  //   // Confirm that all the todos passed to `json` have status true.
+  //   for (Todo todo : todoArrayListCaptor.getValue()) {
+  //     assertEquals(true, todo.status);
+  //   }
+  // }
 }

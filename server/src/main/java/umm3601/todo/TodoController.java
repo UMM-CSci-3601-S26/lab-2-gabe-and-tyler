@@ -32,6 +32,8 @@ public class TodoController implements Controller {
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
+  static final String STATUS_KEY = "status";
+
   private final JacksonMongoCollection<Todo> todoCollection;
 
   // Constructing a controller for todos.
@@ -55,6 +57,13 @@ public class TodoController implements Controller {
    */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
+
+    if (ctx.queryParamMap().containsKey(STATUS_KEY)) {
+      Boolean status = ctx.queryParamAsClass(STATUS_KEY, Boolean.class)
+        .get();
+      filters.add(eq(STATUS_KEY, status));
+    }
+
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
   }
