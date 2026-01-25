@@ -32,6 +32,8 @@ public class TodoController implements Controller {
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
+  static final String LIMIT_KEY = "limit";
+
   private final JacksonMongoCollection<Todo> todoCollection;
 
   // Constructing a controller for todos.
@@ -58,6 +60,16 @@ public class TodoController implements Controller {
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
   }
+
+  // Saving for later want to ask questions
+  // private void constructLimit(Context ctx) {
+  //   if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
+  //     int targetLimit = ctx.queryParamAsClass(LIMIT_KEY, Integer.class)
+  //     .check(it -> it > 0, "Limit must be greater than 0")
+  //     .get();
+  //   query.setLimit(targetLimit);
+  //   }
+  // }
 
   /*
    * Construct a Bson sorting document to use in the `sort` method based on the
