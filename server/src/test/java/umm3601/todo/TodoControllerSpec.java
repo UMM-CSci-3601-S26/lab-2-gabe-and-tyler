@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 //import io.javalin.json.JavalinJackson;
 import io.javalin.http.NotFoundResponse;
+//import umm3601.todo.TodoController;
 
 @SuppressWarnings({ "MagicNumber" })
 
@@ -196,5 +198,23 @@ class TodoControllerSpec {
     });
 
     assertEquals("The requested todo was not found", exception.getMessage());
+  }
+
+  @Test
+  void canGetTodosWithCategory() throws IOException {
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {"basketball"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.CATEGORY_KEY)).thenReturn("basketball");
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that all the todos passed to `json` have the category basketball.
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals("basketball", todo.category);
+    }
   }
 }

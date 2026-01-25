@@ -2,10 +2,12 @@ package umm3601.todo;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.bson.UuidRepresentation;
@@ -32,6 +34,9 @@ public class TodoController implements Controller {
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
+  // Creating our query filter label
+  static final String CATEGORY_KEY = "category";
+
   private final JacksonMongoCollection<Todo> todoCollection;
 
   // Constructing a controller for todos.
@@ -55,6 +60,13 @@ public class TodoController implements Controller {
    */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
+
+    // If statement to filter by the category specified
+    if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(CATEGORY_KEY, pattern));
+    }
+
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
   }
