@@ -206,15 +206,32 @@ class TodoControllerSpec {
     queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {"basketball"}));
     when(ctx.queryParamMap()).thenReturn(queryParams);
     when(ctx.queryParam(TodoController.CATEGORY_KEY)).thenReturn("basketball");
+    
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    
+    // Confirm that all the todos passed to `json` have the category basketball.
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals("basketball", todo.category);
+    }
+  }
+    
+  void canGetTodosWithOwner() throws IOException {
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.OWNER_KEY, Arrays.asList(new String[] {"Lakers"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.OWNER_KEY)).thenReturn("Lakers");
 
     todoController.getTodos(ctx);
 
     verify(ctx).json(todoArrayListCaptor.capture());
     verify(ctx).status(HttpStatus.OK);
-
-    // Confirm that all the todos passed to `json` have the category basketball.
+    
+    // Confirm that all the todos passed to `json` have the owner Lakers.
     for (Todo todo : todoArrayListCaptor.getValue()) {
-      assertEquals("basketball", todo.category);
+      assertEquals("Lakers", todo.owner);
     }
   }
 }
