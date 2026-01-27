@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-//import java.util.HashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,11 +40,8 @@ import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
-//import io.javalin.json.JavalinJackson;
+import io.javalin.json.JavalinJackson;
 import io.javalin.http.NotFoundResponse;
-// import io.javalin.validation.Validation;
-// import io.javalin.validation.Validator;
-// import umm3601.todo.TodoController;
 import io.javalin.validation.Validation;
 import io.javalin.validation.Validator;
 //import umm3601.todo.TodoController;
@@ -205,8 +202,7 @@ class TodoControllerSpec {
 
     assertEquals("The requested todo was not found", exception.getMessage());
   }
-
-  // Need to ask question on why testing isn't working and getting null
+  
   @Test
   void canGetTodosWithStatus() throws IOException {
     Boolean targetStatus = true;
@@ -220,15 +216,51 @@ class TodoControllerSpec {
     Validation validation = new Validation();
     Validator<Boolean> validator = validation.validator(TodoController.STATUS_KEY, Boolean.class, targetStatusString);
     when(ctx.queryParamAsClass(TodoController.STATUS_KEY, Boolean.class)).thenReturn(validator);
+    
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    
+    // Confirm that all the todos passed to `json` have status true.
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals(true, todo.status);
+    }
+  }
+  
+  @Test
+  void canGetTodosWithCategory() throws IOException {
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {"basketball"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.CATEGORY_KEY)).thenReturn("basketball");
 
     todoController.getTodos(ctx);
 
     verify(ctx).json(todoArrayListCaptor.capture());
     verify(ctx).status(HttpStatus.OK);
 
-    // Confirm that all the todos passed to `json` have status true.
+    // Confirm that all the todos passed to `json` have the category basketball.
     for (Todo todo : todoArrayListCaptor.getValue()) {
-      assertEquals(true, todo.status);
+      assertEquals("basketball", todo.category);
+    }
+  }
+
+  @Test
+  void canGetTodosWithOwner() throws IOException {
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.OWNER_KEY, Arrays.asList(new String[] {"Lakers"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.OWNER_KEY)).thenReturn("Lakers");
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    
+    // Confirm that all the todos passed to `json` have the owner Lakers.
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals("Lakers", todo.owner);
     }
   }
 }
