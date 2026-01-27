@@ -66,7 +66,8 @@ public class TodoController implements Controller {
     if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
       Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
       filters.add(regex(CATEGORY_KEY, pattern));
-      
+    }
+
     // If statement to filter by the owner specified
     if (ctx.queryParamMap().containsKey(OWNER_KEY)) {
       Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(OWNER_KEY)), Pattern.CASE_INSENSITIVE);
