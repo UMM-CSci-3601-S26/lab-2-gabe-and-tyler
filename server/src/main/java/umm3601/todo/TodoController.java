@@ -33,7 +33,7 @@ public class TodoController implements Controller {
 
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
-  
+
   // Creating our query filter labels
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
@@ -62,14 +62,14 @@ public class TodoController implements Controller {
    */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
-    
+
     // If statement to filter by the status specified
     if (ctx.queryParamMap().containsKey(STATUS_KEY)) {
       Boolean status = ctx.queryParamAsClass(STATUS_KEY, Boolean.class)
         .get();
       filters.add(eq(STATUS_KEY, status));
     }
-    
+
     // If statement to filter by the category specified
     if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
       Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
