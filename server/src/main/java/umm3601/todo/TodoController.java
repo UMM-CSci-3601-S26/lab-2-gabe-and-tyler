@@ -34,7 +34,8 @@ public class TodoController implements Controller {
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
-  // Creating our query filter label
+  // Creating our query filter labels
+  static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";
 
   private final JacksonMongoCollection<Todo> todoCollection;
@@ -60,6 +61,12 @@ public class TodoController implements Controller {
    */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
+
+    // If statement to filter by the category specified
+    if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(CATEGORY_KEY, pattern));
+    }
 
     // If statement to filter by the owner specified
     if (ctx.queryParamMap().containsKey(OWNER_KEY)) {
