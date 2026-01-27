@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// import org.bson.BsonInt32;
+// import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
@@ -61,15 +63,15 @@ public class TodoController implements Controller {
     return combinedFilter;
   }
 
-  // Saving for later want to ask questions
-  // private void constructLimit(Context ctx) {
-  //   if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
-  //     int targetLimit = ctx.queryParamAsClass(LIMIT_KEY, Integer.class)
-  //     .check(it -> it > 0, "Limit must be greater than 0")
-  //     .get();
-  //   query.setLimit(targetLimit);
-  //   }
-  // }
+  private int constructLimit(Context ctx) {
+    if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
+      int targetLimit = ctx.queryParamAsClass(LIMIT_KEY, int.class)
+      .check(it -> it > 0, "Limit must be greater than 0")
+      .get();
+
+      return targetLimit;
+    }
+  }
 
   /*
    * Construct a Bson sorting document to use in the `sort` method based on the
@@ -102,6 +104,7 @@ public class TodoController implements Controller {
   public void getTodos(Context ctx) {
     Bson combinedFilter = constructFilter(ctx);
     Bson sortingOrder = constructSortingOrder(ctx);
+    int limitInput = constructLimit(ctx);
 
     // All three of the find, sort, and into steps happen "in order listed" inside the
     // database. MongoDB is going to find the todos with the specified
@@ -110,6 +113,7 @@ public class TodoController implements Controller {
     ArrayList<Todo> matchingTodos = todoCollection
       .find(combinedFilter)
       .sort(sortingOrder)
+      .limit(limitInput)
       .into(new ArrayList<>());
 
     // Set the JSON body of the response to be the list of todos returned by the database.
