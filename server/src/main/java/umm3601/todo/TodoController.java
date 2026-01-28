@@ -38,6 +38,7 @@ public class TodoController implements Controller {
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";
+  static final String SORTBY_KEY = "sortBy";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
@@ -102,8 +103,8 @@ public class TodoController implements Controller {
    *    to sort the database collection of users
    */
   private Bson constructSortingOrder(Context ctx) {
-    String sortBy = Objects.requireNonNullElse(ctx.queryParam("sortby"), "owner");
-    String sortOrder = Objects.requireNonNullElse(ctx.queryParam("sortorder"), "asc");
+    String sortBy = Objects.requireNonNullElse(ctx.queryParam("sortBy"), "owner");
+    String sortOrder = Objects.requireNonNullElse(ctx.queryParam("sortOrder"), "asc");
     Bson sortingOrder = sortOrder.equals("desc") ?  Sorts.descending(sortBy) : Sorts.ascending(sortBy);
     return sortingOrder;
   }
