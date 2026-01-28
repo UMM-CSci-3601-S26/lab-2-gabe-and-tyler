@@ -2,10 +2,12 @@ package umm3601.todo;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 // import org.bson.BsonInt32;
 // import org.bson.BsonValue;
@@ -37,6 +39,10 @@ public class TodoController implements Controller {
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
   static final String LIMIT_KEY = "limit";
+  // Creating our query filter labels
+  static final String STATUS_KEY = "status";
+  static final String CATEGORY_KEY = "category";
+  static final String OWNER_KEY = "owner";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
@@ -61,6 +67,33 @@ public class TodoController implements Controller {
    */
   private Bson constructFilter(Context ctx) {
     List<Bson> filters = new ArrayList<>();
+
+    // If statement to filter by the status specified
+    if (ctx.queryParamMap().containsKey(STATUS_KEY)) {
+      String status = ctx.queryParamAsClass(STATUS_KEY, String.class)
+        .get();
+
+      if (status.equals("complete")) {
+        Boolean statusBoolean = true;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      } else {
+        Boolean statusBoolean = false;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      }
+    }
+
+    // If statement to filter by the category specified
+    if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(CATEGORY_KEY, pattern));
+    }
+
+    // If statement to filter by the owner specified
+    if (ctx.queryParamMap().containsKey(OWNER_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(OWNER_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(OWNER_KEY, pattern));
+    }
+
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
   }
