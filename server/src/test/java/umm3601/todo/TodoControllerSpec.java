@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-//import java.util.HashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +41,8 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 //import io.javalin.json.JavalinJackson;
 import io.javalin.http.NotFoundResponse;
-//import io.javalin.validation.Validation;
-//import io.javalin.validation.Validator;
+import io.javalin.validation.Validation;
+import io.javalin.validation.Validator;
 //import umm3601.todo.TodoController;
 
 @SuppressWarnings({ "MagicNumber" })
@@ -203,27 +203,26 @@ class TodoControllerSpec {
     assertEquals("The requested todo was not found", exception.getMessage());
   }
 
-  // @Test
-  // void canGetTodosLimitedTo7() throws IOException {
-  //   int limit = 7;
-  //   String limitString = "7";
+  @Test
+  void canGetTodosLimitedTo2() throws IOException {
+    Integer limit = 2;
+    String limitString = "2";
 
-  //   Map<String, List<String>> queryParams = new HashMap<>();
-  //   queryParams.put(TodoController.LIMIT_KEY, Arrays.asList(new String[] {limitString}));
-  //   when(ctx.queryParamMap()).thenReturn(queryParams);
-  //   when(ctx.queryParam(TodoController.LIMIT_KEY)).thenReturn(limitString);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.LIMIT_KEY, Arrays.asList(new String[] {limitString}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.LIMIT_KEY)).thenReturn(limitString);
 
+    Validation validation = new Validation();
+    Validator<Integer> validator = validation.validator(TodoController.LIMIT_KEY, Integer.class, limitString);
+    when(ctx.queryParamAsClass(TodoController.LIMIT_KEY, Integer.class)).thenReturn(validator);
 
-  //   Validation validation = new Validation();
-  //   Validator<Integer> validator = validation.validator(TodoController.LIMIT_KEY, Integer.class, limitString);
-  //   when(ctx.queryParamAsClass(TodoController.LIMIT_KEY, Integer.class)).thenReturn(validator);
+    todoController.getTodos(ctx);
 
-  //   todoController.getTodos(ctx);
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
 
-  //   verify(ctx).json(todoArrayListCaptor.capture());
-  //   verify(ctx).status(HttpStatus.OK);
-
-  //   // Confirm that we are only showing 7 todos
-  //  assertEquals(limit, todoArrayListCaptor.getValue().size());
-  // }
+    // Confirm that we are only showing 2 todos
+    assertEquals(limit, todoArrayListCaptor.getValue().size());
+  }
 }

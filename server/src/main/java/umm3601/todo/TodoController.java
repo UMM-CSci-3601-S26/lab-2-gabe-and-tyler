@@ -65,9 +65,9 @@ public class TodoController implements Controller {
     return combinedFilter;
   }
 
-  private int constructLimit(Context ctx) {
+  private Integer constructLimit(Context ctx) {
     if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
-      int targetLimit = ctx.queryParamAsClass(LIMIT_KEY, int.class)
+      Integer targetLimit = ctx.queryParamAsClass(LIMIT_KEY, Integer.class)
       .check(it -> it > 0, "Limit must be greater than 0")
       .get();
 
@@ -109,7 +109,7 @@ public class TodoController implements Controller {
   public void getTodos(Context ctx) {
     Bson combinedFilter = constructFilter(ctx);
     Bson sortingOrder = constructSortingOrder(ctx);
-    int limitInput = constructLimit(ctx);
+    Integer limitInput = constructLimit(ctx);
 
     // All three of the find, sort, and into steps happen "in order listed" inside the
     // database. MongoDB is going to find the todos with the specified
