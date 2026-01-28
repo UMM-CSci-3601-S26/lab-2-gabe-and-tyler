@@ -25,6 +25,8 @@ import io.javalin.http.HttpStatus;
 import io.javalin.http.NotFoundResponse;
 import umm3601.Controller;
 
+@SuppressWarnings({ "MagicNumber" })
+
 // Controller that manages request for info about todos.
 public class TodoController implements Controller {
 
@@ -35,10 +37,15 @@ public class TodoController implements Controller {
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
   // Creating our query filter labels
+  static final String LIMIT_KEY = "limit";
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";
   static final String SORTBY_KEY = "sortBy";
+  static final String BODY_KEY = "body";
+
+  private static final String CATEGORY_REGEX = "^(groceries|homework|software design|video games|basketball)$";
+  private static final String OWNER_REGEX = "^(Blanche|Fry|Barry|Workman|Dawn|Roberta|Lakers)$";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
@@ -66,25 +73,56 @@ public class TodoController implements Controller {
 
     // If statement to filter by the status specified
     if (ctx.queryParamMap().containsKey(STATUS_KEY)) {
-      Boolean status = ctx.queryParamAsClass(STATUS_KEY, Boolean.class)
+      String status = ctx.queryParamAsClass(STATUS_KEY, String.class)
         .get();
-      filters.add(eq(STATUS_KEY, status));
+
+      if (status.equals("complete")) {
+        Boolean statusBoolean = true;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      } else if (status.equals("incomplete")) {
+        Boolean statusBoolean = false;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      } else {
+        throw new BadRequestResponse("The requested status wasn't a legal status (complete/incomplete)");
+      }
     }
 
     // If statement to filter by the category specified
     if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
-      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
-      filters.add(regex(CATEGORY_KEY, pattern));
+      String category = ctx.queryParamAsClass(CATEGORY_KEY, String.class)
+        .check(it -> it.matches(CATEGORY_REGEX), "Category must be a legal category")
+        .get();
+      filters.add(eq(CATEGORY_KEY, category));
     }
 
     // If statement to filter by the owner specified
     if (ctx.queryParamMap().containsKey(OWNER_KEY)) {
-      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(OWNER_KEY)), Pattern.CASE_INSENSITIVE);
-      filters.add(regex(OWNER_KEY, pattern));
+      String owner = ctx.queryParamAsClass(OWNER_KEY, String.class)
+        .check(it -> it.matches(OWNER_REGEX), "Owner must be a legal owner")
+        .get();
+      filters.add(eq(OWNER_KEY, owner));
+    }
+
+    if (ctx.queryParamMap().containsKey(BODY_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(BODY_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(BODY_KEY, pattern));
     }
 
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
     return combinedFilter;
+  }
+
+  private Integer constructLimit(Context ctx) {
+    if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
+      Integer targetLimit = ctx.queryParamAsClass(LIMIT_KEY, Integer.class)
+      .check(it -> it > 0, "Limit must be greater than 0")
+      .get();
+
+      return targetLimit;
+    } else {
+      return 300; // this is how many todos I believe are in the database.
+      //             Using this number ensuring all todos still show.
+    }
   }
 
   /*
@@ -118,6 +156,7 @@ public class TodoController implements Controller {
   public void getTodos(Context ctx) {
     Bson combinedFilter = constructFilter(ctx);
     Bson sortingOrder = constructSortingOrder(ctx);
+    Integer limitInput = constructLimit(ctx);
 
     // All three of the find, sort, and into steps happen "in order listed" inside the
     // database. MongoDB is going to find the todos with the specified
@@ -126,6 +165,7 @@ public class TodoController implements Controller {
     ArrayList<Todo> matchingTodos = todoCollection
       .find(combinedFilter)
       .sort(sortingOrder)
+      .limit(limitInput)
       .into(new ArrayList<>());
 
     // Set the JSON body of the response to be the list of todos returned by the database.

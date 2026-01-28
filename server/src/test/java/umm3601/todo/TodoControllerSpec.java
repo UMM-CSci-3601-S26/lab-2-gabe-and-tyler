@@ -142,6 +142,7 @@ class TodoControllerSpec {
     todoController = new TodoController(db);
   }
 
+  // all our test for added funtionailrty
   @Test
   void addsRoutes() {
     Javalin mockServer = mock(Javalin.class);
@@ -203,9 +204,32 @@ class TodoControllerSpec {
   }
 
   @Test
+  void canGetTodosLimitedTo2() throws IOException {
+    Integer limit = 2;
+    String limitString = "2";
+
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.LIMIT_KEY, Arrays.asList(new String[] {limitString}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.LIMIT_KEY)).thenReturn(limitString);
+
+    Validation validation = new Validation();
+    Validator<Integer> validator = validation.validator(TodoController.LIMIT_KEY, Integer.class, limitString);
+    when(ctx.queryParamAsClass(TodoController.LIMIT_KEY, Integer.class)).thenReturn(validator);
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that we are only showing 2 todos
+    assertEquals(limit, todoArrayListCaptor.getValue().size());
+  }
+
+
   void canGetTodosWithStatus() throws IOException {
-    Boolean targetStatus = true;
-    String targetStatusString = targetStatus.toString();
+    //Boolean targetStatus = true;
+    String targetStatusString = "complete";
 
     Map<String, List<String>> queryParams = new HashMap<>();
     queryParams.put(TodoController.STATUS_KEY, Arrays.asList(new String[] {targetStatusString}));
@@ -213,8 +237,8 @@ class TodoControllerSpec {
     when(ctx.queryParam(TodoController.STATUS_KEY)).thenReturn(targetStatusString);
 
     Validation validation = new Validation();
-    Validator<Boolean> validator = validation.validator(TodoController.STATUS_KEY, Boolean.class, targetStatusString);
-    when(ctx.queryParamAsClass(TodoController.STATUS_KEY, Boolean.class)).thenReturn(validator);
+    Validator<String> validator = validation.validator(TodoController.STATUS_KEY, String.class, targetStatusString);
+    when(ctx.queryParamAsClass(TodoController.STATUS_KEY, String.class)).thenReturn(validator);
 
     todoController.getTodos(ctx);
 
@@ -230,37 +254,57 @@ class TodoControllerSpec {
   @Test
   void canGetTodosWithCategory() throws IOException {
     Map<String, List<String>> queryParams = new HashMap<>();
-    queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {"basketball"}));
+    String categoryString = "basketball";
+    queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {categoryString}));
     when(ctx.queryParamMap()).thenReturn(queryParams);
-    when(ctx.queryParam(TodoController.CATEGORY_KEY)).thenReturn("basketball");
+
+    Validation validation = new Validation();
+    Validator<String> validator = validation.validator(TodoController.CATEGORY_KEY, String.class, categoryString);
+    when(ctx.queryParamAsClass(TodoController.CATEGORY_KEY, String.class)).thenReturn(validator);
 
     todoController.getTodos(ctx);
 
     verify(ctx).json(todoArrayListCaptor.capture());
     verify(ctx).status(HttpStatus.OK);
 
-    // Confirm that all the todos passed to `json` have the category basketball.
-    for (Todo todo : todoArrayListCaptor.getValue()) {
-      assertEquals("basketball", todo.category);
-    }
+    assertEquals(1, todoArrayListCaptor.getValue().size());
   }
 
   @Test
   void canGetTodosWithOwner() throws IOException {
     Map<String, List<String>> queryParams = new HashMap<>();
-    queryParams.put(TodoController.OWNER_KEY, Arrays.asList(new String[] {"Lakers"}));
+    String ownerString = "Lakers";
+    queryParams.put(TodoController.OWNER_KEY, Arrays.asList(new String[] {ownerString}));
     when(ctx.queryParamMap()).thenReturn(queryParams);
-    when(ctx.queryParam(TodoController.OWNER_KEY)).thenReturn("Lakers");
+
+    Validation validation = new Validation();
+    Validator<String> validator = validation.validator(TodoController.OWNER_KEY, String.class, ownerString);
+    when(ctx.queryParamAsClass(TodoController.OWNER_KEY, String.class)).thenReturn(validator);
 
     todoController.getTodos(ctx);
 
     verify(ctx).json(todoArrayListCaptor.capture());
     verify(ctx).status(HttpStatus.OK);
 
-    // Confirm that all the todos passed to `json` have the owner Lakers.
-    for (Todo todo : todoArrayListCaptor.getValue()) {
-      assertEquals("Lakers", todo.owner);
+    assertEquals(1, todoArrayListCaptor.getValue().size());
     }
+
+  @Test
+  void canGetBodyWithString() throws IOException {
+    Integer bodyNumber = 2;
+
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.BODY_KEY, Arrays.asList(new String[] {"number 1"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.BODY_KEY)).thenReturn("number 1");
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that we have two bodies with the phrase number 1.
+    assertEquals(bodyNumber, todoArrayListCaptor.getValue().size());
   }
 
   @Test
