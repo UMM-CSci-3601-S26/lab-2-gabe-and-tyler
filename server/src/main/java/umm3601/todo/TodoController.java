@@ -44,7 +44,8 @@ public class TodoController implements Controller {
   static final String SORTBY_KEY = "sortBy";
   static final String BODY_KEY = "body";
 
-  private static final String CATEGORY_REGEX = "^(groceries|homework|software design|video games|basketball)$";
+  private static final String CATEGORY_REGEX =
+    "^(groceries|homework|software design|video games|basketball|bamboozler)$";
   private static final String OWNER_REGEX = "^(Blanche|Fry|Barry|Workman|Dawn|Roberta|Lakers)$";
 
   private final JacksonMongoCollection<Todo> todoCollection;
