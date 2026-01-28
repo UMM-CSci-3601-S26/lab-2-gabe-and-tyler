@@ -262,4 +262,31 @@ class TodoControllerSpec {
       assertEquals("Lakers", todo.owner);
     }
   }
+
+  @Test
+  void canGetSortedTodosByCategory() throws IOException {
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.SORTBY_KEY, Arrays.asList(new String[] {"category"}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.SORTBY_KEY)).thenReturn("category");
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    List<String> sortedList = new ArrayList<>();
+
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      sortedList.add(todo.category);
+    }
+
+    List<String> myList = new ArrayList<>();
+    myList.add("bamboozler");
+    myList.add("basketball");
+    myList.add("giant");
+    myList.add("mamba");
+
+    assertEquals(myList, sortedList);
+  }
 }
