@@ -65,9 +65,16 @@ public class TodoController implements Controller {
 
     // If statement to filter by the status specified
     if (ctx.queryParamMap().containsKey(STATUS_KEY)) {
-      Boolean status = ctx.queryParamAsClass(STATUS_KEY, Boolean.class)
+      String status = ctx.queryParamAsClass(STATUS_KEY, String.class)
         .get();
-      filters.add(eq(STATUS_KEY, status));
+
+      if (status.equals("complete")) {
+        Boolean statusBoolean = true;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      } else {
+        Boolean statusBoolean = false;
+        filters.add(eq(STATUS_KEY, statusBoolean));
+      }
     }
 
     // If statement to filter by the category specified
