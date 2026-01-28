@@ -226,7 +226,7 @@ class TodoControllerSpec {
     assertEquals(limit, todoArrayListCaptor.getValue().size());
   }
 
-
+  @Test
   void canGetTodosWithStatus() throws IOException {
     //Boolean targetStatus = true;
     String targetStatusString = "complete";
@@ -248,6 +248,30 @@ class TodoControllerSpec {
     // Confirm that all the todos passed to `json` have status true.
     for (Todo todo : todoArrayListCaptor.getValue()) {
       assertEquals(true, todo.status);
+    }
+  }
+
+  @Test
+  void canGetTodosWithStatusIncomplete() throws IOException {
+    String targetStatusString = "incomplete";
+
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.STATUS_KEY, Arrays.asList(new String[] {targetStatusString}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.STATUS_KEY)).thenReturn(targetStatusString);
+
+    Validation validation = new Validation();
+    Validator<String> validator = validation.validator(TodoController.STATUS_KEY, String.class, targetStatusString);
+    when(ctx.queryParamAsClass(TodoController.STATUS_KEY, String.class)).thenReturn(validator);
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that all the todos passed to `json` have status true.
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals(false, todo.status);
     }
   }
 
@@ -332,5 +356,37 @@ class TodoControllerSpec {
     myList.add("mamba");
 
     assertEquals(myList, sortedList);
+  }
+
+  @Test
+  void getTodosByOwnerAndCategory() throws IOException {
+    String targetOwnerString = "Lakers";
+    String targetCategoryString = "bamboozler";
+
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.OWNER_KEY, Arrays.asList(new String[] {targetOwnerString}));
+    queryParams.put(TodoController.CATEGORY_KEY, Arrays.asList(new String[] {targetCategoryString}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.OWNER_KEY)).thenReturn(targetOwnerString);
+
+    Validation validation = new Validation();
+    Validator<String> validator = validation.validator(TodoController.CATEGORY_KEY, String.class, targetCategoryString);
+    when(ctx.queryParamAsClass(TodoController.CATEGORY_KEY, String.class)).thenReturn(validator);
+    when(ctx.queryParam(TodoController.CATEGORY_KEY)).thenReturn(targetCategoryString);
+
+    Validation validation2 = new Validation();
+    Validator<String> validator2 = validation2.validator(TodoController.OWNER_KEY, String.class, targetOwnerString);
+    when(ctx.queryParamAsClass(TodoController.OWNER_KEY, String.class)).thenReturn(validator2);
+    when(ctx.queryParam(TodoController.OWNER_KEY)).thenReturn(targetOwnerString);
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+    assertEquals(1, todoArrayListCaptor.getValue().size());
+    for (Todo todo : todoArrayListCaptor.getValue()) {
+      assertEquals(targetOwnerString, todo.owner);
+      assertEquals(targetCategoryString, todo.category);
+    }
   }
 }
