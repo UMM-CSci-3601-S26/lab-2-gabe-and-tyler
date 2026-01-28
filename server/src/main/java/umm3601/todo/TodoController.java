@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-// import org.bson.BsonInt32;
-// import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
@@ -43,6 +41,10 @@ public class TodoController implements Controller {
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";
+  static final String BODY_KEY = "body";
+
+  private static final String CATEGORY_REGEX = "^(groceries|homework|software design|video games|basketball)$";
+  private static final String OWNER_REGEX = "^(Blanche|Fry|Barry|Workman|Dawn|Roberta|Lakers)$";
 
   private final JacksonMongoCollection<Todo> todoCollection;
 
@@ -84,14 +86,23 @@ public class TodoController implements Controller {
 
     // If statement to filter by the category specified
     if (ctx.queryParamMap().containsKey(CATEGORY_KEY)) {
-      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(CATEGORY_KEY)), Pattern.CASE_INSENSITIVE);
-      filters.add(regex(CATEGORY_KEY, pattern));
+      String category = ctx.queryParamAsClass(CATEGORY_KEY, String.class)
+        .check(it -> it.matches(CATEGORY_REGEX), "Category must be a legal category")
+        .get();
+      filters.add(eq(CATEGORY_KEY, category));
     }
 
     // If statement to filter by the owner specified
     if (ctx.queryParamMap().containsKey(OWNER_KEY)) {
-      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(OWNER_KEY)), Pattern.CASE_INSENSITIVE);
-      filters.add(regex(OWNER_KEY, pattern));
+      String owner = ctx.queryParamAsClass(OWNER_KEY, String.class)
+        .check(it -> it.matches(OWNER_REGEX), "Owner must be a legal owner")
+        .get();
+      filters.add(eq(OWNER_KEY, owner));
+    }
+
+    if (ctx.queryParamMap().containsKey(BODY_KEY)) {
+      Pattern pattern = Pattern.compile(Pattern.quote(ctx.queryParam(BODY_KEY)), Pattern.CASE_INSENSITIVE);
+      filters.add(regex(BODY_KEY, pattern));
     }
 
     Bson combinedFilter = filters.isEmpty() ? new Document() : and(filters);
