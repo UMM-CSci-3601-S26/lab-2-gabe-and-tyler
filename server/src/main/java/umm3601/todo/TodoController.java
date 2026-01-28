@@ -78,9 +78,11 @@ public class TodoController implements Controller {
       if (status.equals("complete")) {
         Boolean statusBoolean = true;
         filters.add(eq(STATUS_KEY, statusBoolean));
-      } else {
+      } else if (status.equals("incomplete")) {
         Boolean statusBoolean = false;
         filters.add(eq(STATUS_KEY, statusBoolean));
+      } else {
+        throw new BadRequestResponse("The requested status wasn't a legal status (complete/incomplete)");
       }
     }
 
