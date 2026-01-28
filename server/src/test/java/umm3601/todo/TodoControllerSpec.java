@@ -204,8 +204,8 @@ class TodoControllerSpec {
 
   @Test
   void canGetTodosWithStatus() throws IOException {
-    Boolean targetStatus = true;
-    String targetStatusString = targetStatus.toString();
+    //Boolean targetStatus = true;
+    String targetStatusString = "complete";
 
     Map<String, List<String>> queryParams = new HashMap<>();
     queryParams.put(TodoController.STATUS_KEY, Arrays.asList(new String[] {targetStatusString}));
@@ -213,8 +213,8 @@ class TodoControllerSpec {
     when(ctx.queryParam(TodoController.STATUS_KEY)).thenReturn(targetStatusString);
 
     Validation validation = new Validation();
-    Validator<Boolean> validator = validation.validator(TodoController.STATUS_KEY, Boolean.class, targetStatusString);
-    when(ctx.queryParamAsClass(TodoController.STATUS_KEY, Boolean.class)).thenReturn(validator);
+    Validator<String> validator = validation.validator(TodoController.STATUS_KEY, String.class, targetStatusString);
+    when(ctx.queryParamAsClass(TodoController.STATUS_KEY, String.class)).thenReturn(validator);
 
     todoController.getTodos(ctx);
 
