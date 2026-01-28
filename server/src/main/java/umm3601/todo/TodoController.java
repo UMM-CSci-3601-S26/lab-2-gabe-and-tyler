@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+// import org.bson.BsonInt32;
+// import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.conversions.Bson;
@@ -25,6 +27,8 @@ import io.javalin.http.HttpStatus;
 import io.javalin.http.NotFoundResponse;
 import umm3601.Controller;
 
+@SuppressWarnings({ "MagicNumber" })
+
 // Controller that manages request for info about todos.
 public class TodoController implements Controller {
 
@@ -35,6 +39,7 @@ public class TodoController implements Controller {
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
   // Creating our query filter labels
+  static final String LIMIT_KEY = "limit";
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";
@@ -93,6 +98,19 @@ public class TodoController implements Controller {
     return combinedFilter;
   }
 
+  private Integer constructLimit(Context ctx) {
+    if (ctx.queryParamMap().containsKey(LIMIT_KEY)) {
+      Integer targetLimit = ctx.queryParamAsClass(LIMIT_KEY, Integer.class)
+      .check(it -> it > 0, "Limit must be greater than 0")
+      .get();
+
+      return targetLimit;
+    } else {
+      return 300; // this is how many todos I believe are in the database.
+      //             Using this number ensuring all todos still show.
+    }
+  }
+
   /*
    * Construct a Bson sorting document to use in the `sort` method based on the
    *    query parameters from the context.
@@ -124,6 +142,7 @@ public class TodoController implements Controller {
   public void getTodos(Context ctx) {
     Bson combinedFilter = constructFilter(ctx);
     Bson sortingOrder = constructSortingOrder(ctx);
+    Integer limitInput = constructLimit(ctx);
 
     // All three of the find, sort, and into steps happen "in order listed" inside the
     // database. MongoDB is going to find the todos with the specified
@@ -132,6 +151,7 @@ public class TodoController implements Controller {
     ArrayList<Todo> matchingTodos = todoCollection
       .find(combinedFilter)
       .sort(sortingOrder)
+      .limit(limitInput)
       .into(new ArrayList<>());
 
     // Set the JSON body of the response to be the list of todos returned by the database.

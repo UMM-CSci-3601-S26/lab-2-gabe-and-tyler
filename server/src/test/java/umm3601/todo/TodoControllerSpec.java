@@ -142,6 +142,7 @@ class TodoControllerSpec {
     todoController = new TodoController(db);
   }
 
+  // all our test for added funtionailrty
   @Test
   void addsRoutes() {
     Javalin mockServer = mock(Javalin.class);
@@ -203,6 +204,29 @@ class TodoControllerSpec {
   }
 
   @Test
+  void canGetTodosLimitedTo2() throws IOException {
+    Integer limit = 2;
+    String limitString = "2";
+
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put(TodoController.LIMIT_KEY, Arrays.asList(new String[] {limitString}));
+    when(ctx.queryParamMap()).thenReturn(queryParams);
+    when(ctx.queryParam(TodoController.LIMIT_KEY)).thenReturn(limitString);
+
+    Validation validation = new Validation();
+    Validator<Integer> validator = validation.validator(TodoController.LIMIT_KEY, Integer.class, limitString);
+    when(ctx.queryParamAsClass(TodoController.LIMIT_KEY, Integer.class)).thenReturn(validator);
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that we are only showing 2 todos
+    assertEquals(limit, todoArrayListCaptor.getValue().size());
+  }
+
+
   void canGetTodosWithStatus() throws IOException {
     //Boolean targetStatus = true;
     String targetStatusString = "complete";
