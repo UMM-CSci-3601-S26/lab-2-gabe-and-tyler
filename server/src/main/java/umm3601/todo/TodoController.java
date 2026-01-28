@@ -38,8 +38,8 @@ public class TodoController implements Controller {
   // Creating our path for a todo by id
   private static final String API_TODO_BY_ID = "/api/todos/{id}";
 
-  static final String LIMIT_KEY = "limit";
   // Creating our query filter labels
+  static final String LIMIT_KEY = "limit";
   static final String STATUS_KEY = "status";
   static final String CATEGORY_KEY = "category";
   static final String OWNER_KEY = "owner";

@@ -216,6 +216,17 @@ class TodoControllerSpec {
     Validation validation = new Validation();
     Validator<Integer> validator = validation.validator(TodoController.LIMIT_KEY, Integer.class, limitString);
     when(ctx.queryParamAsClass(TodoController.LIMIT_KEY, Integer.class)).thenReturn(validator);
+
+    todoController.getTodos(ctx);
+
+    verify(ctx).json(todoArrayListCaptor.capture());
+    verify(ctx).status(HttpStatus.OK);
+
+    // Confirm that we are only showing 2 todos
+    assertEquals(limit, todoArrayListCaptor.getValue().size());
+  }
+
+
   void canGetTodosWithStatus() throws IOException {
     //Boolean targetStatus = true;
     String targetStatusString = "complete";
@@ -234,8 +245,6 @@ class TodoControllerSpec {
     verify(ctx).json(todoArrayListCaptor.capture());
     verify(ctx).status(HttpStatus.OK);
 
-    // Confirm that we are only showing 2 todos
-    assertEquals(limit, todoArrayListCaptor.getValue().size());
     // Confirm that all the todos passed to `json` have status true.
     for (Todo todo : todoArrayListCaptor.getValue()) {
       assertEquals(true, todo.status);
